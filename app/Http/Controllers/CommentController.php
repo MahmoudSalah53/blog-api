@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Comment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Validator;
 use App\Traits\ApiResponse;
 
@@ -29,7 +30,8 @@ class CommentController extends Controller
             $comment->user_id = auth()->user()->id;
             $comment->save();
 
-            // تم تصحيح الاستجابة لتكون object بدلاً من string
+            Cache::forget("post_$postId");
+
             return $this->success(['message' => 'Comment Created successfully.'], 201);
 
         } catch (\Exception $e) {
@@ -45,13 +47,14 @@ class CommentController extends Controller
             return $this->error('Comment not found.', 404);
         }
 
-        // تم تصحيح id() إلى id
         if ($comment->user_id !== auth()->user()->id) {
             return $this->error(['message' => 'Unauthorized.'], 403);
         }
 
         try {
             $comment->delete();
+
+            Cache::forget("post_{$comment->post_id}");
 
             return $this->success(['data' => ['message' => 'Comment Deleted successfully.']], 200);
         } catch (\Exception $e) {

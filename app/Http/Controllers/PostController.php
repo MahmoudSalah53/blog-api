@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\PostResource;
 use App\Models\Post;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 use App\Traits\ApiResponse;
 
@@ -66,6 +67,10 @@ class PostController extends Controller
 
             $post->load('user', 'tags');
 
+            for ($i = 1; $i <= 3; $i++) {
+                Cache::forget("posts_page_$i");
+            }
+
             return $this->success([
                 'message' => 'Post created successfully.',
                 'post' => new PostResource($post),
@@ -121,6 +126,12 @@ class PostController extends Controller
 
             $post->load('user', 'tags');
 
+            for ($i = 1; $i <= 3; $i++) {
+                Cache::forget("posts_page_$i");
+            }
+
+            Cache::forget("post_$postId");
+
             return $this->success([
                 'message' => 'Post updated successfully.',
                 'post' => new PostResource($post),
@@ -155,6 +166,8 @@ class PostController extends Controller
         $post->tags()->syncWithoutDetaching($request->tags);
         $post->load('tags');
 
+        Cache::forget("post_$postId");
+
         return $this->success(['message' => 'Tags attached.', 'post' => new PostResource($post)], 200);
     }
 
@@ -182,15 +195,24 @@ class PostController extends Controller
         $post->tags()->detach($request->tags);
         $post->load('tags');
 
+        Cache::forget("post_$postId");
+
         return $this->success(['message' => 'Tags detached.', 'post' => new PostResource($post)], 200);
     }
 
     public function getAllPosts()
     {
         try {
-            $posts = Post::with('user', 'comment.user', 'tags')
-                ->withCount('like')
-                ->paginate(10);
+
+            $page = request()->get('page', 1);
+            $cacheKey = "posts_page_$page";
+
+            $posts = cache()->remember($cacheKey, 60, function () use ($page) {
+                return Post::with('user', 'comment.user', 'tags')
+                    ->withCount('like')
+                    ->orderBy('created_at', 'DESC')
+                    ->paginate(3, ['*'], 'page', $page);
+            });
 
             return $this->success([
                 'posts' => PostResource::collection($posts),
@@ -203,9 +225,13 @@ class PostController extends Controller
     public function getPost($postId)
     {
         try {
-            $post = Post::with('user', 'comment.user', 'tags')
-                ->withCount('like')
-                ->findOrFail($postId);
+            $cacheKey = "post_$postId";
+
+            $post = cache()->remember($cacheKey, 60, function () use ($postId) {
+                return Post::with('user', 'comment.user', 'tags')
+                    ->withCount('like')
+                    ->findOrFail($postId);
+            });
 
             return $this->success([
                 'post' => new PostResource($post),
@@ -225,6 +251,13 @@ class PostController extends Controller
 
         try {
             $post->delete();
+
+            for ($i = 1; $i <= 3; $i++) {
+                Cache::forget("posts_page_$i");
+            }
+
+            Cache::forget("post_$postId");
+
             return $this->success(['message' => 'Post deleted successfully.'], 200);
         } catch (\Exception $e) {
             return $this->error($e->getMessage(), 500);

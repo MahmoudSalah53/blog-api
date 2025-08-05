@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Like;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Validator;
 use App\Traits\ApiResponse;
 
@@ -21,7 +22,7 @@ class LikeController extends Controller
 
             if ($existingLike) {
                 $existingLike->delete();
-                
+                Cache::forget("post_$postId");
                 return $this->success('Post has been successfully unliked.', 201);
             }
 
@@ -30,6 +31,8 @@ class LikeController extends Controller
             $like->post_id = $postId;
             $like->user_id = auth()->user()->id;
             $like->save();
+            
+            Cache::forget("post_$postId");
 
             return $this->success('Post successfully liked', 201);
 

@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\LikeController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\TagController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +35,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('comments')->group(function () {
         Route::post('/add/{postId}', [CommentController::class, 'addNewComment']);
         Route::delete('/delete/{commentId}', [CommentController::class, 'deleteComment']);
+    });
+
+    // Tags Prefix
+    Route::prefix('tags')->group(function () {
+        Route::post('/add', [TagController::class, 'addTag']);
+        Route::delete('/delete/{tagId}', [TagController::class, 'deleteTag']);
     });
 
 });

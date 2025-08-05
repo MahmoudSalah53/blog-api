@@ -24,6 +24,9 @@ class PostResource extends JsonResource
                 'id' => $this->user->id,
                 'name' => $this->user->name,
             ],
+
+            'tags' => $this->tags->pluck('name'),
+
             'comments' => $this->whenLoaded('comment', function () {
                 return $this->comment->map(function ($comment) {
                     return [

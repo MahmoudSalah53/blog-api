@@ -29,4 +29,9 @@ class Post extends Model
     {
         return $this->hasMany(Like::class, 'post_id');
     }
+
+    public function tags()
+{
+    return $this->belongsToMany(Tag::class);
+}
 }

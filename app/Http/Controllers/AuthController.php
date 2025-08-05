@@ -34,7 +34,6 @@ class AuthController extends Controller
             ], 201);
         } catch (\Exception $e) {
             return $this->error( $e->getMessage(), 403);
-            
         }
     }
 

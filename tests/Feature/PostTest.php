@@ -21,7 +21,7 @@ class PostTest extends TestCase
             'content' => 'This is a test post.'
         ]);
 
-        $response->assertStatus(200)
+        $response->assertStatus(201)
             ->assertJsonStructure([
                 'message',
                 'post' => [
@@ -31,7 +31,6 @@ class PostTest extends TestCase
                     'author'
                 ]
             ]);
-
 
         $this->assertDatabaseHas('posts', [
             'title' => 'Test Post'
@@ -106,7 +105,7 @@ class PostTest extends TestCase
         $response = $this->deleteJson("/api/posts/delete/{$post->id}");
 
         $response->assertStatus(200)
-            ->assertJsonFragment(['message' => 'Post Deleted successfully.']);
+            ->assertJsonFragment(['message' => 'Post deleted successfully.']);
 
         $this->assertDatabaseMissing('posts', ['id' => $post->id]);
     }

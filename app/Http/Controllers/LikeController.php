@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 
+use App\Events\PostLiked;
 use App\Models\Like;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -31,6 +32,8 @@ class LikeController extends Controller
             $like->post_id = $postId;
             $like->user_id = auth()->user()->id;
             $like->save();
+
+            broadcast(new PostLiked($like))->toOthers();
             
             Cache::forget("post_$postId");
 

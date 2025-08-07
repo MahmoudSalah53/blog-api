@@ -20,7 +20,7 @@ class LikeTest extends TestCase
         $token = $user->createToken('TestToken')->plainTextToken;
 
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->postJson("/api/posts/{$post->id}/like");
+            ->postJson("/api/posts/like/{$post->id}");
 
         $response->assertStatus(201);
         $this->assertEquals('"Post successfully liked"', $response->getContent());
@@ -44,7 +44,7 @@ class LikeTest extends TestCase
         $token = $user->createToken('TestToken')->plainTextToken;
 
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->postJson("/api/posts/{$post->id}/like");
+            ->postJson("/api/posts/like/{$post->id}");
 
         $response->assertStatus(201);
         $this->assertEquals('"Post has been successfully unliked."', $response->getContent());
@@ -63,7 +63,7 @@ class LikeTest extends TestCase
 
         // First like
         $response1 = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->postJson("/api/posts/{$post->id}/like");
+            ->postJson("/api/posts/like/{$post->id}");
             
         $response1->assertStatus(201);
         $this->assertEquals('"Post successfully liked"', $response1->getContent());
@@ -75,7 +75,7 @@ class LikeTest extends TestCase
 
         // Then unlike
         $response2 = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->postJson("/api/posts/{$post->id}/like");
+            ->postJson("/api/posts/like/{$post->id}");
             
         $response2->assertStatus(201);
         $this->assertEquals('"Post has been successfully unliked."', $response2->getContent());

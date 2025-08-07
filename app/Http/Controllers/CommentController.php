@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\CommentAdded;
 use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -29,6 +30,8 @@ class CommentController extends Controller
             $comment->post_id = $postId;
             $comment->user_id = auth()->user()->id;
             $comment->save();
+
+            broadcast(new CommentAdded($comment))->toOthers();
 
             Cache::forget("post_$postId");
 

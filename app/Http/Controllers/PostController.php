@@ -200,18 +200,34 @@ class PostController extends Controller
         return $this->success(['message' => 'Tags detached.', 'post' => new PostResource($post)], 200);
     }
 
-    public function getAllPosts()
+    public function getAllPosts(Request $request)
     {
         try {
+            $page = $request->get('page', 1);
+            $search = $request->get('search');
+            $tagId = $request->get('tag_id');
 
-            $page = request()->get('page', 1);
-            $cacheKey = "posts_page_$page";
+            $cacheKey = "posts_page_{$page}_search_" . md5($search . '_' . $tagId);
 
-            $posts = cache()->remember($cacheKey, 60, function () use ($page) {
-                return Post::with('user', 'comment.user', 'tags')
+            $posts = cache()->remember($cacheKey, 60, function () use ($page, $search, $tagId) {
+                $query = Post::with('user', 'comment.user', 'tags')
                     ->withCount('like')
-                    ->orderBy('created_at', 'DESC')
-                    ->paginate(3, ['*'], 'page', $page);
+                    ->orderBy('created_at', 'DESC');
+
+                if (!empty($search)) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('title', 'LIKE', "%{$search}%")
+                            ->orWhere('content', 'LIKE', "%{$search}%");
+                    });
+                }
+
+                if (!empty($tagId)) {
+                    $query->whereHas('tags', function ($q) use ($tagId) {
+                        $q->where('tags.id', $tagId);
+                    });
+                }
+
+                return $query->paginate(3, ['*'], 'page', $page);
             });
 
             return $this->success([
@@ -221,6 +237,7 @@ class PostController extends Controller
             return $this->error($e->getMessage(), 500);
         }
     }
+
 
     public function getPost($postId)
     {

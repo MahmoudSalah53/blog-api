@@ -35,14 +35,13 @@ A modern, feature-rich RESTful Blog API built with Laravel 12, featuring real-ti
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/laravel-blog-api.git
-cd laravel-blog-api
+https://github.com/MahmoudSalah53/blog-api.git
+cd blog-api
 ```
 
 2. **Install dependencies**
 ```bash
 composer install
-npm install
 ```
 
 3. **Environment configuration**
@@ -56,9 +55,9 @@ php artisan key:generate
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=blog_api
-DB_USERNAME=your_username
-DB_PASSWORD=your_password
+DB_DATABASE=blog-api
+DB_USERNAME=root
+DB_PASSWORD=
 ```
 
 5. **Configure Broadcasting**
@@ -79,8 +78,7 @@ php artisan broadcast:install
 
 7. **Run migrations and seeders**
 ```bash
-php artisan migrate
-php artisan db:seed
+php artisan migrate --seed
 ```
 
 8. **Start the services**
@@ -93,4 +91,45 @@ php artisan reverb:start
 
 # Start queue worker (in another terminal)
 php artisan queue:work
+
+# To run tests
+php artisan test
 ```
+
+## 📚 API Endpoints
+
+### Authentication
+| Method | Endpoint         | Description                | Auth Required |
+|--------|------------------|----------------------------|---------------|
+| POST   | `/api/register`  | User registration          | No            |
+| POST   | `/api/login`     | User login                 | No            |
+| POST   | `/api/logout`    | User logout                | Yes           |
+| GET    | `/api/user`      | Get authenticated user     | Yes           |
+
+### Posts
+| Method | Endpoint                | Description                      | Auth Required |
+|--------|-------------------------|----------------------------------|---------------|
+| GET    | `/api/posts/all`        | Get all posts (with pagination)  | No            |
+| GET    | `/api/posts/show/{id}`  | Get a specific post              | No            |
+| POST   | `/api/posts/add`        | Create new post                  | Yes           |
+| POST   | `/api/posts/edit/{id}`  | Edit post                        | Yes           |
+| DELETE | `/api/posts/delete/{id}`| Delete post                      | Yes           |
+| POST   | `/api/posts/like/{id}`  | Like/Unlike post                 | Yes           |
+
+### Comments
+| Method | Endpoint                       | Description                  | Auth Required |
+|--------|--------------------------------|------------------------------|---------------|
+| POST   | `/api/comments/add/{postId}`   | Add comment to post          | Yes           |
+| DELETE | `/api/comments/delete/{id}`    | Delete comment               | Yes           |
+
+### Tags
+| Method | Endpoint               | Description         | Auth Required |
+|--------|------------------------|---------------------|---------------|
+| POST   | `/api/tags/add`         | Create new tag      | Yes           |
+| DELETE | `/api/tags/delete/{id}` | Delete tag          | Yes           |
+
+## 👨‍💻 Developer
+
+**Mahmoud Salah**  
+💼 [GitHub](https://github.com/MahmoudSalah53)  
+📧 Mahmoudsalahmansour53@gmail.com  

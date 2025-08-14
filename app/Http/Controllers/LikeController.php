@@ -14,6 +14,26 @@ class LikeController extends Controller
 {
     use ApiResponse;
 
+    /**
+     * @OA\Post(
+     *     path="/api/posts/like/{postId}",
+     *     tags={"Likes"},
+     *     summary="Toggle like/unlike for a post",
+     *     description="If the post is already liked by the user, it will be unliked. Otherwise, it will be liked.",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="postId",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the post to like/unlike",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(response=201, description="Post successfully liked/unliked"),
+     *     @OA\Response(response=401, description="Unauthenticated"),
+     *     @OA\Response(response=404, description="Post not found")
+     * )
+     */
+
     public function toggleLikePost($postId)
     {
         try {
@@ -34,7 +54,7 @@ class LikeController extends Controller
             $like->save();
 
             broadcast(new PostLiked($like))->toOthers();
-            
+
             Cache::forget("post_$postId");
 
             return $this->success('Post successfully liked', 201);

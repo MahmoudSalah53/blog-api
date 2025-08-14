@@ -36,6 +36,89 @@ class PostController extends Controller
         return $tags;
     }
 
+    public function attachTags(Request $request, $postId)
+    {
+        $tags = $this->normalizeTags($request->input('tags'));
+        if (is_null($tags)) {
+            return $this->error(['tags' => ['The tags field is required.']], 422);
+        }
+        $request->merge(['tags' => $tags]);
+
+        $validator = Validator::make($request->all(), [
+            'tags' => 'required|array',
+            'tags.*' => 'integer|exists:tags,id',
+        ]);
+        if ($validator->fails())
+            return $this->error($validator->errors(), 422);
+
+        $post = Post::find($postId);
+        if (!$post)
+            return $this->error('Post not found.', 404);
+        if ($post->user_id !== auth()->id())
+            return $this->error('Unauthorized.', 403);
+
+        $post->tags()->syncWithoutDetaching($request->tags);
+        $post->load('tags');
+
+        Cache::forget("post_$postId");
+
+        return $this->success(['message' => 'Tags attached.', 'post' => new PostResource($post)], 200);
+    }
+
+    public function detachTags(Request $request, $postId)
+    {
+        $tags = $this->normalizeTags($request->input('tags'));
+        if (is_null($tags)) {
+            return $this->error(['tags' => ['The tags field is required.']], 422);
+        }
+        $request->merge(['tags' => $tags]);
+
+        $validator = Validator::make($request->all(), [
+            'tags' => 'required|array',
+            'tags.*' => 'integer|exists:tags,id',
+        ]);
+        if ($validator->fails())
+            return $this->error($validator->errors(), 422);
+
+        $post = Post::find($postId);
+        if (!$post)
+            return $this->error('Post not found.', 404);
+        if ($post->user_id !== auth()->id())
+            return $this->error('Unauthorized.', 403);
+
+        $post->tags()->detach($request->tags);
+        $post->load('tags');
+
+        Cache::forget("post_$postId");
+
+        return $this->success(['message' => 'Tags detached.', 'post' => new PostResource($post)], 200);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/posts/add",
+     *     tags={"Posts"},
+     *     summary="Add new post",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"title","content","tags"},
+     *             @OA\Property(property="title", type="string", example="My Post"),
+     *             @OA\Property(property="content", type="string", example="Post content"),
+     *             @OA\Property(
+     *                 property="tags",
+     *                 type="array",
+     *                 @OA\Items(type="integer"),
+     *                 example={1, 2, 3}
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Post created successfully"),
+     *     @OA\Response(response=401, description="Unauthenticated")
+     * )
+     */
+
     public function addNewPost(Request $request)
     {
         $tags = $this->normalizeTags($request->input('tags'));
@@ -80,6 +163,43 @@ class PostController extends Controller
             return $this->error($e->getMessage(), 500);
         }
     }
+
+    /**
+     * @OA\Post(
+     *     path="/api/posts/edit/{postId}",
+     *     summary="Edit post",
+     *     tags={"Posts"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="postId",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the post to edit",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="title", type="string", example="Updated title"),
+     *             @OA\Property(property="content", type="string", example="Updated content"),
+     *             @OA\Property(
+     *                 property="tags",
+     *                 type="array",
+     *                 @OA\Items(type="integer"),
+     *                 example={2, 3}
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Post updated successfully"
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated"),
+     *     @OA\Response(response=404, description="Post not found"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
+
 
     public function editPost(Request $request, $postId)
     {
@@ -142,63 +262,40 @@ class PostController extends Controller
         }
     }
 
-    public function attachTags(Request $request, $postId)
-    {
-        $tags = $this->normalizeTags($request->input('tags'));
-        if (is_null($tags)) {
-            return $this->error(['tags' => ['The tags field is required.']], 422);
-        }
-        $request->merge(['tags' => $tags]);
-
-        $validator = Validator::make($request->all(), [
-            'tags' => 'required|array',
-            'tags.*' => 'integer|exists:tags,id',
-        ]);
-        if ($validator->fails())
-            return $this->error($validator->errors(), 422);
-
-        $post = Post::find($postId);
-        if (!$post)
-            return $this->error('Post not found.', 404);
-        if ($post->user_id !== auth()->id())
-            return $this->error('Unauthorized.', 403);
-
-        $post->tags()->syncWithoutDetaching($request->tags);
-        $post->load('tags');
-
-        Cache::forget("post_$postId");
-
-        return $this->success(['message' => 'Tags attached.', 'post' => new PostResource($post)], 200);
-    }
-
-    public function detachTags(Request $request, $postId)
-    {
-        $tags = $this->normalizeTags($request->input('tags'));
-        if (is_null($tags)) {
-            return $this->error(['tags' => ['The tags field is required.']], 422);
-        }
-        $request->merge(['tags' => $tags]);
-
-        $validator = Validator::make($request->all(), [
-            'tags' => 'required|array',
-            'tags.*' => 'integer|exists:tags,id',
-        ]);
-        if ($validator->fails())
-            return $this->error($validator->errors(), 422);
-
-        $post = Post::find($postId);
-        if (!$post)
-            return $this->error('Post not found.', 404);
-        if ($post->user_id !== auth()->id())
-            return $this->error('Unauthorized.', 403);
-
-        $post->tags()->detach($request->tags);
-        $post->load('tags');
-
-        Cache::forget("post_$postId");
-
-        return $this->success(['message' => 'Tags detached.', 'post' => new PostResource($post)], 200);
-    }
+    /**
+     * @OA\Get(
+     *     path="/api/posts/all",
+     *     tags={"Posts"},
+     *     summary="Get all posts",
+     *     description="Retrieve a paginated list of posts. If no parameters are provided, returns all posts with default pagination.",
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number for pagination (optional)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Search keyword for post title or content (optional)",
+     *         required=false,
+     *         @OA\Schema(type="string", example="Laravel")
+     *     ),
+     *     @OA\Parameter(
+     *         name="tag_id",
+     *         in="query",
+     *         description="Filter posts by tag ID (optional)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=3)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of posts retrieved successfully"
+     *     ),
+     *     @OA\Response(response=500, description="Server error")
+     * )
+     */
 
     public function getAllPosts(Request $request)
     {
@@ -238,6 +335,27 @@ class PostController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/posts/show/{postId}",
+     *     tags={"Posts"},
+     *     summary="Get a single post",
+     *     description="Retrieve detailed information for a single post by its ID.",
+     *     @OA\Parameter(
+     *         name="postId",
+     *         in="path",
+     *         description="ID of the post",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=5)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Post retrieved successfully"
+     *     ),
+     *     @OA\Response(response=404, description="Post not found"),
+     *     @OA\Response(response=500, description="Server error")
+     * )
+     */
 
     public function getPost($postId)
     {
@@ -257,6 +375,26 @@ class PostController extends Controller
             return $this->error($e->getMessage(), 500);
         }
     }
+
+    /**
+     * @OA\Delete(
+     *     path="/api/posts/delete/{postId}",
+     *     summary="Delete post",
+     *     tags={"Posts"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="postId",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the post to delete",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(response=200, description="Post deleted successfully"),
+     *     @OA\Response(response=401, description="Unauthenticated"),
+     *     @OA\Response(response=403, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Post not found")
+     * )
+     */
 
     public function deletePost($postId)
     {

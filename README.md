@@ -14,6 +14,7 @@ A modern, feature-rich RESTful Blog API built with Laravel 12, featuring real-ti
 - **Advanced Search & Filtering** - Full-text search and dynamic filters
 - **Comprehensive Testing** - PHPUnit test coverage
 - **Clean Code Architecture** - Following Laravel best practices
+- **Swagger API Documentation** - Interactive API docs at /api/docs
 
 ## 📋 Core Entities
 
@@ -30,6 +31,7 @@ A modern, feature-rich RESTful Blog API built with Laravel 12, featuring real-ti
 - **Broadcasting**: Laravel Reverb
 - **Cache**: Local file cache
 - **Testing**: PHPUnit
+- **Documentation**: Swagger UI (/api/docs)
 
 ## ⚙️ Setup Steps
 

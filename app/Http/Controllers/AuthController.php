@@ -9,11 +9,43 @@ use Hash;
 use Illuminate\Http\Request;
 use App\Traits\ApiResponse;
 
+/**
+ * @OA\Tag(
+ *     name="Auth",
+ *     description="Sanctum-based authentication"
+ * )
+ */
 class AuthController extends Controller
 {
     use ApiResponse;
 
-    public function register (RegisterRequest $request)
+    /**
+     * @OA\Post(
+     *     path="/api/register",
+     *     tags={"Auth"},
+     *     summary="Register a new user",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"name","email","password","password_confirmation"},
+     *             @OA\Property(property="name", type="string", example="Ahmed"),
+     *             @OA\Property(property="email", type="string", format="email", example="ahmed@example.com"),
+     *             @OA\Property(property="password", type="string", format="password", example="12345678"),
+     *             @OA\Property(property="password_confirmation", type="string", format="password", example="12345678")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="User registered successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="access_token", type="string"),
+     *             @OA\Property(property="user", ref="#/components/schemas/User")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Validation error")
+     * )
+     */
+    public function register(RegisterRequest $request)
     {
         try {
             $user = User::create([
@@ -33,11 +65,35 @@ class AuthController extends Controller
                 ]
             ], 201);
         } catch (\Exception $e) {
-            return $this->error( $e->getMessage(), 403);
+            return $this->error($e->getMessage(), 403);
         }
     }
 
-    public function login (LoginRequest $request)
+    /**
+     * @OA\Post(
+     *     path="/api/login",
+     *     tags={"Auth"},
+     *     summary="Login user",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email","password"},
+     *             @OA\Property(property="email", type="string", format="email", example="ahmed@example.com"),
+     *             @OA\Property(property="password", type="string", format="password", example="12345678")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Login successful",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="access_token", type="string"),
+     *             @OA\Property(property="user", ref="#/components/schemas/User")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Invalid credentials")
+     * )
+     */
+    public function login(LoginRequest $request)
     {
         try {
             $user = User::where('email', $request->email)->first();
@@ -60,17 +116,26 @@ class AuthController extends Controller
                     'email' => $user->email,
                 ]
             ], 200);
-
         } catch (\Exception $e) {
             return $this->error('Something went wrong. Please try again later', 500);
         }
     }
 
-    public function logout (Request $request)
+    /**
+     * @OA\Post(
+     *     path="/api/logout",
+     *     tags={"Auth"},
+     *     summary="Logout user (Sanctum)",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Logged out successfully"
+     *     )
+     * )
+     */
+    public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
-
         return $this->success('Logged out successfully.', 200);
     }
-
 }

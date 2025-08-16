@@ -75,11 +75,11 @@ REVERB_SCHEME=http
 
 6. **Configure Caching and Docs**
 ```env
-// Caching
+# Caching
 CACHE_STORE=file
 CACHE_DRIVER=file
 
-// Docs
+# Docs
 L5_SWAGGER_CONST_HOST=http://127.0.0.1:8000
 ```
 

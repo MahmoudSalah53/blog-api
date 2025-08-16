@@ -73,6 +73,16 @@ REVERB_PORT=8080
 REVERB_SCHEME=http
 ```
 
+6. **Configure Caching and Docs**
+```env
+// Caching
+CACHE_STORE=file
+CACHE_DRIVER=file
+
+// Docs
+L5_SWAGGER_CONST_HOST=http://127.0.0.1:8000
+```
+
 6. **Install broadcasting package (if not installed yet)**
 ```bash
 php artisan broadcast:install

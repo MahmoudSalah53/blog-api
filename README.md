@@ -83,12 +83,12 @@ CACHE_DRIVER=file
 L5_SWAGGER_CONST_HOST=http://127.0.0.1:8000
 ```
 
-6. **Install broadcasting package (if not installed yet)**
+7. **Install broadcasting package (if not installed yet)**
 ```bash
 php artisan broadcast:install
 ```
 
-7. **Run migrations and seeders**
+8. **Run migrations and seeders**
 ```bash
 php artisan migrate --seed
 ```
